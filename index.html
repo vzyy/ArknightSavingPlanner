@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arknights Orundum Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Share+Tech+Mono&display=swap');
+
+        body {
+            /* Anda bisa mengganti URL gambar ini dengan gambar karakter favorit Anda */
+            background-image: url('https://pbs.twimg.com/media/G0eUqIKbMAA7H2z?format=jpg&name=large'); 
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #e5e7eb;
+        }
+
+        .bg-overlay {
+            background: rgba(17, 24, 39, 0.85); /* Sedikit lebih gelap agar teks lebih kontras */
+            backdrop-filter: blur(1px); 
+            -webkit-backdrop-filter: blur(1px);
+            min-height: 100vh;
+        }
+
+        .ak-panel {
+            background: rgba(31, 41, 55, 0.7);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.05);
+            backdrop-filter: blur(5px);
+        }
+        
+        .ak-title-font {
+            font-family: 'Share Tech Mono', monospace;
+            letter-spacing: 0.05em;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); }
+        ::-webkit-scrollbar-thumb { background: #3b82f6; }
+        ::-webkit-scrollbar-thumb:hover { background: #2563eb; }
+        
+        .form-checkbox {
+            appearance: none;
+            background-color: rgba(17, 24, 39, 0.8);
+            margin: 0;
+            color: currentColor;
+            width: 1.25em;
+            height: 1.25em;
+            border: 1px solid #4b5563;
+            border-radius: 0.25em;
+            display: grid;
+            place-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .form-checkbox::before {
+            content: "";
+            width: 0.65em;
+            height: 0.65em;
+            transform: scale(0);
+            transition: 120ms transform ease-in-out;
+            box-shadow: inset 1em 1em #3b82f6; 
+            background-color: #3b82f6;
+            transform-origin: center;
+            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        }
+        .form-checkbox:checked::before { transform: scale(1); }
+        .form-checkbox:checked { border-color: #3b82f6; }
+
+        input[type="number"], select {
+            background: rgba(17, 24, 39, 0.6);
+            border: 1px solid #4b5563;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+            background: rgba(17, 24, 39, 0.9);
+        }
+
+        @keyframes shimmer {
+            100% { transform: translateX(100%); }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-overlay p-4 md:p-8">
+        <div class="max-w-5xl mx-auto space-y-6">
+            
+            <!-- Header -->
+            <div class="ak-panel p-6 rounded-xl relative overflow-hidden group">
+                <div class="absolute -right-10 -top-10 w-32 h-32 bg-blue-600 opacity-20 rotate-45 transform group-hover:scale-110 transition duration-500"></div>
+                
+                <h1 class="text-3xl md:text-4xl font-extrabold text-white ak-title-font flex items-center justify-center gap-3 relative z-10">
+                    <i class="fa-solid fa-cube text-blue-500"></i>
+                    RHODES ISLAND TERMINAL
+                </h1>
+                <p class="text-center text-blue-300 mt-2 text-sm uppercase tracking-widest relative z-10">Strategic Asset Planner v3.0</p>
+            </div>
+
+            <!-- Bagian Baru: Aset Saat Ini (Full Width) -->
+            <div class="ak-panel p-6 rounded-xl border-l-4 border-l-purple-500">
+                <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-600 pb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-wallet text-purple-400"></i> Aset Saat Ini (Inventory)
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <!-- Input Orundum -->
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wider">Orundum</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa-solid fa-gem text-red-500/50"></i>
+                            </div>
+                            <input type="number" id="currentOrundum" value="0" min="0" class="w-full pl-10 p-2.5 text-white font-bold">
+                        </div>
+                    </div>
+                    <!-- Input OP -->
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wider">Originite Prime</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa-solid fa-circle-nodes text-yellow-500/50"></i>
+                            </div>
+                            <input type="number" id="currentOP" value="0" min="0" class="w-full pl-10 p-2.5 text-white font-bold">
+                        </div>
+                    </div>
+                    <!-- Input HH Ticket -->
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wider">Headhunt Ticket</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa-solid fa-ticket text-green-500/50"></i>
+                            </div>
+                            <input type="number" id="currentHH" value="0" min="0" class="w-full pl-10 p-2.5 text-white font-bold">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- KOLOM KIRI -->
+                <div class="space-y-6">
+                    
+                    <!-- Card 1: Dasar & Periode -->
+                    <div class="ak-panel p-6 rounded-xl hover:border-blue-400 transition duration-300">
+                        <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-600 pb-2 flex items-center gap-2">
+                            <i class="fa-regular fa-clock text-blue-400"></i> Parameter Waktu & Misi
+                        </h2>
+                        
+                        <div class="space-y-5">
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wider">Durasi Kontrak (Bulan)</label>
+                                <div class="flex items-center gap-3">
+                                    <input type="number" id="months" value="1" min="0" step="0.5" class="w-full p-2.5 text-white text-lg font-bold">
+                                    <span class="text-sm font-semibold text-blue-300 whitespace-nowrap w-24"><i class="fa-solid fa-calendar-day mr-1"></i> <span id="daysDisplay">30</span> Hari</span>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3 bg-gray-900/40 p-4 rounded-lg border border-gray-700/50">
+                                <label class="flex items-center justify-between cursor-pointer group">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-check-double text-gray-400"></i>
+                                        <span class="text-sm text-gray-200">Misi Harian <span class="text-xs text-gray-500">(100/hari)</span></span>
+                                    </div>
+                                    <input type="checkbox" id="dailyM" checked class="form-checkbox">
+                                </label>
+                                <label class="flex items-center justify-between cursor-pointer group">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-calendar-week text-gray-400"></i>
+                                        <span class="text-sm text-gray-200">Misi Mingguan <span class="text-xs text-gray-500">(500/mgg)</span></span>
+                                    </div>
+                                    <input type="checkbox" id="weeklyM" checked class="form-checkbox">
+                                </label>
+                                <label class="flex items-center justify-between cursor-pointer group">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-gem text-blue-400"></i>
+                                        <span class="text-sm text-gray-200 font-semibold">Monthly Card <span class="text-xs text-blue-300 font-normal">(200/h + OP)</span></span>
+                                    </div>
+                                    <input type="checkbox" id="monthlyCard" class="form-checkbox">
+                                </label>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wider"><i class="fa-solid fa-skull mr-1"></i> Annihilation Limit (Per Minggu)</label>
+                                <input type="number" id="annihilation" value="1800" min="0" max="1800" step="100" class="w-full p-2.5 text-white font-bold">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Shop & Certificates -->
+                    <div class="ak-panel p-6 rounded-xl hover:border-yellow-400 transition duration-300">
+                        <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-600 pb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-store text-yellow-400"></i> Certificate Shop (Pembelian Bulanan)
+                        </h2>
+                        
+                        <div class="space-y-3">
+                            <label class="flex items-center justify-between cursor-pointer p-3 bg-gray-900/40 rounded border border-gray-700 hover:border-green-500/50 transition">
+                                <div class="flex items-center gap-3">
+                                    <i class="fa-solid fa-ticket text-green-400 w-5 text-center"></i>
+                                    <div>
+                                        <span class="block text-sm font-semibold text-gray-200">Commendation (Tier 1)</span>
+                                        <span class="block text-xs text-gray-400">+2 HH Ticket</span>
+                                    </div>
+                                </div>
+                                <input type="checkbox" id="greenCert1" checked class="form-checkbox">
+                            </label>
+
+                            <label class="flex items-center justify-between cursor-pointer p-3 bg-gray-900/40 rounded border border-gray-700 hover:border-green-500/50 transition">
+                                <div class="flex items-center gap-3">
+                                    <i class="fa-solid fa-ticket text-green-400 w-5 text-center"></i>
+                                    <div>
+                                        <span class="block text-sm font-semibold text-gray-200">Commendation (Tier 2)</span>
+                                        <span class="block text-xs text-gray-400">+2 HH Ticket</span>
+                                    </div>
+                                </div>
+                                <input type="checkbox" id="greenCert2" class="form-checkbox">
+                            </label>
+
+                            <!-- Pembaruan: Dropdown Yellow Cert -->
+                            <div class="p-3 bg-gray-900/40 rounded border border-gray-700 hover:border-yellow-500/50 transition">
+                                <div class="flex flex-col gap-2">
+                                    <div class="flex items-center gap-3">
+                                        <i class="fa-solid fa-ticket text-yellow-400 w-5 text-center"></i>
+                                        <label class="block text-sm font-semibold text-gray-200">Distinction (Yellow Cert)</label>
+                                    </div>
+                                    <select id="yellowCertLevel" class="w-full p-2 text-white font-semibold text-sm cursor-pointer mt-1">
+                                        <option value="0">Tidak Beli (0 Ticket)</option>
+                                        <option value="1">Tahap 1: Biaya 10 Cert (+1 Ticket)</option>
+                                        <option value="2">Tahap 2: Biaya 28 Cert (+3 Ticket)</option>
+                                        <option value="3">Tahap 3: Biaya 68 Cert (+7 Ticket)</option>
+                                        <option value="4">Tahap 4: Biaya 118 Cert (+14 Ticket)</option>
+                                        <option value="5">Tahap 5: FULL 258 Cert (+38 Ticket)</option>
+                                    </select>
+                                    <p class="text-xs text-gray-400 mt-1"><i class="fa-solid fa-circle-info mr-1"></i> Asumsi beli level ini setiap bulan reset.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- KOLOM KANAN -->
+                <div class="space-y-6">
+                    
+                    <!-- Card 3: Base Farming -->
+                    <div class="ak-panel p-6 rounded-xl hover:border-blue-400 transition duration-300">
+                        <h2 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-industry text-blue-400"></i> RIIC Factory (Orirock)
+                        </h2>
+                        <p class="text-xs text-gray-400 mb-4">1 Shard = 2 Orirock Cube + 1600 LMD = 20 Orundum.</p>
+                        
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1 uppercase tracking-wider">Target Produksi/Hari</label>
+                            <div class="flex gap-2 items-center">
+                                <input type="number" id="baseFarmPerDay" value="0" min="0" step="20" class="w-full p-2.5 text-white font-bold">
+                                <span class="text-sm font-bold text-red-400 bg-red-900/30 px-3 py-2 rounded">Orundum</span>
+                            </div>
+                            <div id="shardCostHelper" class="mt-3 p-3 bg-gray-900/60 rounded-lg text-sm border border-gray-700 hidden">
+                                <p class="text-gray-300 font-semibold mb-1 border-b border-gray-700 pb-1">Kebutuhan Harian:</p>
+                                <div class="flex justify-between items-center mt-2">
+                                    <span class="text-yellow-600 font-bold"><i class="fa-solid fa-cubes"></i> <span id="rockNeed">0</span> Rock</span>
+                                    <span class="text-blue-400 font-bold"><i class="fa-solid fa-coins"></i> <span id="lmdNeed">0</span> LMD</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: Events -->
+                    <div class="ak-panel p-6 rounded-xl hover:border-blue-400 transition duration-300">
+                        <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-600 pb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-map-location-dot text-blue-400"></i> Operasi & Event
+                        </h2>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between bg-gray-900/40 p-3 rounded border border-gray-700">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-200">Side Story (Baru)</label>
+                                    <span class="text-xs text-gray-400">~29 OP, 3 HH, Maint.</span>
+                                </div>
+                                <input type="number" id="newEvent" value="1" min="0" class="w-16 p-1 text-center text-white font-bold">
+                            </div>
+
+                            <div class="flex items-center justify-between bg-gray-900/40 p-3 rounded border border-gray-700">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-200">Rerun Event</label>
+                                    <span class="text-xs text-gray-400">Maint, Intel Cert (~2000 Orun)</span>
+                                </div>
+                                <input type="number" id="rerunEvent" value="0" min="0" class="w-16 p-1 text-center text-white font-bold">
+                            </div>
+
+                            <div class="flex items-center justify-between bg-gray-900/40 p-3 rounded border border-gray-700">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-200">Vignette (Mini)</label>
+                                    <span class="text-xs text-gray-400">~15 OP, Maint.</span>
+                                </div>
+                                <input type="number" id="miniEvent" value="0" min="0" class="w-16 p-1 text-center text-white font-bold">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <button onclick="calculateAll()" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-xl ak-title-font py-5 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.4)] transition duration-300 transform hover:scale-[1.01] border border-blue-400 relative overflow-hidden group">
+                <span class="relative z-10"><i class="fa-solid fa-microchip mr-2"></i> EKSEKUSI KALKULASI</span>
+                <div class="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+            </button>
+
+            <!-- Result Section -->
+            <div id="resultSection" class="hidden ak-panel p-8 rounded-2xl border-2 border-blue-500 shadow-[0_0_30px_rgba(37,99,235,0.3)] mt-8 relative overflow-hidden">
+                <i class="fa-solid fa-chart-pie absolute -right-10 -bottom-10 text-9xl text-blue-900/20"></i>
+                
+                <h2 class="text-2xl ak-title-font text-center text-white mb-8 border-b border-gray-700 pb-4">PROYEKSI ASET AKHIR (CURRENT + SAVING)</h2>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 relative z-10">
+                    <!-- Orundum Box -->
+                    <div class="bg-gray-900/80 p-5 rounded-xl border border-red-900/50 text-center shadow-lg relative">
+                        <i class="fa-solid fa-gem absolute top-3 right-3 text-red-500/20 text-2xl"></i>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Total Orundum</p>
+                        <p class="text-3xl font-extrabold text-red-400" id="resOrundum">0</p>
+                    </div>
+                    <!-- Originite Prime Box -->
+                    <div class="bg-gray-900/80 p-5 rounded-xl border border-yellow-900/50 text-center shadow-lg relative">
+                        <i class="fa-solid fa-circle-nodes absolute top-3 right-3 text-yellow-500/20 text-2xl"></i>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Total OP</p>
+                        <p class="text-3xl font-extrabold text-yellow-400" id="resOP">0</p>
+                        <p class="text-xs text-yellow-600 mt-2 font-semibold bg-yellow-900/20 rounded py-1">≈ <span id="opToOrundum">0</span> Orundum</p>
+                    </div>
+                    <!-- HH Ticket Box -->
+                    <div class="bg-gray-900/80 p-5 rounded-xl border border-green-900/50 text-center shadow-lg relative">
+                        <i class="fa-solid fa-ticket absolute top-3 right-3 text-green-500/20 text-2xl"></i>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Total HH Ticket</p>
+                        <p class="text-3xl font-extrabold text-green-400" id="resHH">0</p>
+                        <p class="text-xs text-green-600 mt-2 font-semibold bg-green-900/20 rounded py-1">≈ <span id="hhToOrundum">0</span> Orundum</p>
+                    </div>
+                </div>
+
+                <div class="text-center p-8 bg-blue-900/30 rounded-xl border border-blue-500/50 relative z-10 backdrop-blur-md mb-8">
+                    <p class="text-blue-300 font-bold tracking-widest mb-3 uppercase text-sm">Estimasi Total Gacha Capacity</p>
+                    <div class="flex justify-center items-baseline gap-2 mb-2">
+                        <h3 class="text-6xl font-extrabold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]" id="resTotalPulls">0</h3>
+                        <span class="text-2xl text-blue-400 font-bold ak-title-font">PULLS</span>
+                    </div>
+                    <p class="text-sm text-gray-300 mt-4 inline-block bg-gray-900/80 px-5 py-2 rounded-full border border-gray-600 shadow-inner">
+                        Nilai Keseluruhan: <span id="resGrandOrundum" class="font-bold text-blue-300 text-lg">0</span> <span class="text-xs text-gray-400">Orundum Equivalent</span>
+                    </p>
+                </div>
+
+                <!-- NEW: AI PRTS Section -->
+                <div class="bg-gray-900/90 rounded-xl border border-cyan-500/50 relative z-10 overflow-hidden">
+                    <div class="bg-cyan-900/40 p-3 border-b border-cyan-500/30 flex items-center justify-between">
+                        <h3 class="text-cyan-400 font-bold ak-title-font flex items-center gap-2">
+                            <i class="fa-solid fa-satellite-dish"></i> PRTS TACTICAL ADVISOR (GEMINI AI)
+                        </h3>
+                        <span class="text-xs text-cyan-500 bg-cyan-900/50 px-2 py-1 rounded">System Online</span>
+                    </div>
+                    <div class="p-5">
+                        <p class="text-sm text-gray-300 mb-3">Tanyakan strategi gacha atau konsultasikan target operator Anda kepada PRTS berdasarkan kalkulasi di atas.</p>
+                        
+                        <div class="flex gap-3">
+                            <input type="text" id="aiInput" placeholder="Contoh: Apakah 150 pulls cukup untuk dapat W Alter?" class="flex-1 p-3 text-white font-medium border-b-2 border-cyan-700 bg-gray-800 focus:border-cyan-400 rounded-t outline-none transition">
+                            <button id="btnAskPRTS" onclick="askPRTS()" class="bg-cyan-700 hover:bg-cyan-500 text-white px-6 py-3 rounded font-bold transition flex items-center gap-2">
+                                <i class="fa-solid fa-paper-plane"></i> Tanya
+                            </button>
+                        </div>
+                        
+                        <div id="aiErrorBox" class="hidden mt-3 text-sm text-red-400 bg-red-900/20 p-3 rounded border border-red-800"></div>
+
+                        <!-- AI Response Area -->
+                        <div id="aiResponseContainer" class="hidden mt-5 bg-black/50 p-4 rounded border border-cyan-800/50">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-8 h-8 rounded-full bg-cyan-900 flex items-center justify-center border border-cyan-500">
+                                    <i class="fa-solid fa-robot text-cyan-400 text-xs"></i>
+                                </div>
+                                <span class="text-cyan-300 font-bold text-sm ak-title-font">PRTS_RESPONSE_TERMINAL</span>
+                            </div>
+                            <div id="aiLoading" class="hidden text-cyan-500 text-sm py-2 flex items-center gap-2">
+                                <i class="fa-solid fa-circle-notch fa-spin"></i> Memproses kalkulasi neural...
+                            </div>
+                            <div id="aiResponseText" class="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- END AI Section -->
+
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Update tampilan Hari
+        document.getElementById('months').addEventListener('input', function(e) {
+            const months = parseFloat(e.target.value) || 0;
+            document.getElementById('daysDisplay').innerText = Math.floor(months * 30);
+        });
+
+        // Helper Biaya Base Farming
+        document.getElementById('baseFarmPerDay').addEventListener('input', function(e) {
+            const orundumPerDay = parseInt(e.target.value) || 0;
+            const helper = document.getElementById('shardCostHelper');
+            if (orundumPerDay > 0) {
+                const shardsNeeded = orundumPerDay / 20; 
+                const rocks = shardsNeeded * 2;
+                const lmd = shardsNeeded * 1600;
+                document.getElementById('rockNeed').innerText = Math.ceil(rocks);
+                document.getElementById('lmdNeed').innerText = lmd.toLocaleString('id-ID');
+                helper.classList.remove('hidden');
+            } else {
+                helper.classList.add('hidden');
+            }
+        });
+
+        function calculateAll() {
+            // 0. ASET SAAT INI (Modal Awal)
+            const currentOrundum = parseInt(document.getElementById('currentOrundum').value) || 0;
+            const currentOP = parseInt(document.getElementById('currentOP').value) || 0;
+            const currentHH = parseInt(document.getElementById('currentHH').value) || 0;
+
+            // 1. WAKTU & MISI
+            const months = parseFloat(document.getElementById('months').value) || 0;
+            const days = Math.floor(months * 30);
+            const weeks = Math.floor(days / 7);
+
+            const hasDaily = document.getElementById('dailyM').checked;
+            const hasWeekly = document.getElementById('weeklyM').checked;
+            const hasMonthly = document.getElementById('monthlyCard').checked;
+            const annihilationCap = parseInt(document.getElementById('annihilation').value) || 0;
+
+            // 2. SHOP (Green & Yellow)
+            const green1 = document.getElementById('greenCert1').checked;
+            const green2 = document.getElementById('greenCert2').checked;
+            const yellowLevel = parseInt(document.getElementById('yellowCertLevel').value);
+
+            // Logika tiket dari Yellow Cert berdasarkan level
+            let yellowTicketsPerMonth = 0;
+            if (yellowLevel === 1) yellowTicketsPerMonth = 1;      // 10 cert
+            else if (yellowLevel === 2) yellowTicketsPerMonth = 3; // 10 + 18 cert
+            else if (yellowLevel === 3) yellowTicketsPerMonth = 7; // 10 + 18 + 40 cert
+            else if (yellowLevel === 4) yellowTicketsPerMonth = 14;// 10 + 18 + 40 + 50 cert
+            else if (yellowLevel === 5) yellowTicketsPerMonth = 38;// 258 cert full
+
+            // 3. BASE & EVENT
+            const baseOrundumPerDay = parseInt(document.getElementById('baseFarmPerDay').value) || 0;
+            const newEventCount = parseInt(document.getElementById('newEvent').value) || 0;
+            const rerunEventCount = parseInt(document.getElementById('rerunEvent').value) || 0;
+            const miniEventCount = parseInt(document.getElementById('miniEvent').value) || 0;
+
+            // --- PROSES KALKULASI TABUNGAN ---
+            let savingOrundum = 0;
+            let savingOP = 0;
+            let savingHH = 0;
+
+            // Misi Harian/Mingguan/Bulanan
+            if (hasDaily) savingOrundum += 100 * days;
+            if (hasWeekly) savingOrundum += 500 * weeks;
+            if (hasMonthly) {
+                savingOrundum += 200 * days;
+                savingOP += 6 * Math.floor(days / 30); // 6 OP tiap bulan reset
+            }
+            savingOrundum += annihilationCap * weeks;
+            savingOrundum += baseOrundumPerDay * days;
+
+            // Shop Bulanan
+            const fullMonths = Math.floor(months); 
+            if (green1) savingHH += 2 * fullMonths;
+            if (green2) savingHH += 2 * fullMonths;
+            savingHH += yellowTicketsPerMonth * fullMonths; // Sesuai level dropdown
+
+            // Events
+            const totalMaint = (newEventCount + rerunEventCount + miniEventCount) * 300;
+            savingOrundum += totalMaint;
+            savingOP += 29 * newEventCount;
+            savingHH += 3 * newEventCount;
+            savingOrundum += 2000 * rerunEventCount; // Intel cert as orundum
+            savingOP += 15 * miniEventCount;
+
+
+            // --- PENGGABUNGAN MODAL AWAL + TABUNGAN ---
+            const finalOrundum = currentOrundum + savingOrundum;
+            const finalOP = currentOP + savingOP;
+            const finalHH = currentHH + savingHH;
+
+            // --- KONVERSI KE PULLS ---
+            const opInOrundum = finalOP * 180;
+            const hhInOrundum = finalHH * 600;
+            const grandTotalOrundum = finalOrundum + opInOrundum + hhInOrundum;
+            const finalPulls = Math.floor(grandTotalOrundum / 600);
+
+            // --- UPDATE TAMPILAN (DOM) ---
+            document.getElementById('resOrundum').innerText = finalOrundum.toLocaleString('id-ID');
+            document.getElementById('resOP').innerText = finalOP.toLocaleString('id-ID');
+            document.getElementById('opToOrundum').innerText = opInOrundum.toLocaleString('id-ID');
+            document.getElementById('resHH').innerText = finalHH.toLocaleString('id-ID');
+            document.getElementById('hhToOrundum').innerText = hhInOrundum.toLocaleString('id-ID');
+            
+            document.getElementById('resTotalPulls').innerText = finalPulls;
+            document.getElementById('resGrandOrundum').innerText = grandTotalOrundum.toLocaleString('id-ID');
+
+            // Tampilkan Result Box
+            const resultBox = document.getElementById('resultSection');
+            resultBox.classList.remove('hidden');
+            
+            // Efek scroll ke hasil
+            setTimeout(() => {
+                resultBox.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }, 100);
+        }
+
+        async function askPRTS() {
+            const userInput = document.getElementById('aiInput').value.trim();
+            const totalPulls = document.getElementById('resTotalPulls').innerText;
+            const errorBox = document.getElementById('aiErrorBox');
+            const responseContainer = document.getElementById('aiResponseContainer');
+            const responseText = document.getElementById('aiResponseText');
+            const loadingIndicator = document.getElementById('aiLoading');
+            const btnAsk = document.getElementById('btnAskPRTS');
+
+            // Reset UI states
+            errorBox.classList.add('hidden');
+            responseContainer.classList.remove('hidden');
+            responseText.innerHTML = '';
+
+            if (!userInput) {
+                errorBox.innerText = "[ERROR] Mohon masukkan input atau pertanyaan terlebih dahulu, Doctor.";
+                errorBox.classList.remove('hidden');
+                responseContainer.classList.add('hidden');
+                return;
+            }
+
+            // Start Loading state
+            loadingIndicator.classList.remove('hidden');
+            btnAsk.disabled = true;
+            btnAsk.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+            btnAsk.classList.replace('bg-cyan-700', 'bg-gray-600');
+
+            // Sistem prompt agar AI berperan sebagai PRTS
+            const systemPrompt = "Anda adalah PRTS, asisten AI canggih dari Rhodes Island di game Arknights. Tugas Anda adalah menganalisis strategi gacha pemain (Doctor) berdasarkan data kalkulasi yang diberikan. Gunakan nada bicara yang profesional, kalkulatif, taktis, namun tetap mendukung (supportive) layaknya AI sci-fi. Selalu panggil pengguna dengan sebutan 'Doctor'. Gunakan istilah in-game yang tepat (seperti pity, spark, headhunting, rate-up). Jawab secara singkat dan padat (maksimal 2 paragraf pendek).";
+            
+            // Konteks prompt yang menyertakan hasil kalkulasi aplikasi
+            const promptContext = `Laporan Aset Doctor saat ini: Total estimasi kapasitas Gacha adalah ${totalPulls} Pulls. Pertanyaan/Target Doctor: "${userInput}". Berikan analisis dan saran strategis Anda mengenai peluangnya.`;
+
+            const apiKey = ""; // API Key disuntikkan secara otomatis oleh Canvas Immersive
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: promptContext }] }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error("Koneksi ke neural network PRTS gagal.");
+
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    let aiMessage = candidate.content.parts[0].text;
+                    
+                    // Simple markdown parsing for bold text
+                    aiMessage = aiMessage.replace(/\*\*(.*?)\*\*/g, '<span class="text-cyan-300 font-bold">$1</span>');
+                    
+                    responseText.innerHTML = aiMessage;
+                } else {
+                    throw new Error("Respon dari PRTS tidak dapat diterjemahkan.");
+                }
+
+            } catch (error) {
+                errorBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> [SYSTEM ERROR]: ${error.message}`;
+                errorBox.classList.remove('hidden');
+            } finally {
+                // End loading state
+                loadingIndicator.classList.add('hidden');
+                btnAsk.disabled = false;
+                btnAsk.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Tanya';
+                btnAsk.classList.replace('bg-gray-600', 'bg-cyan-700');
+            }
+        }
+    </script>
+</body>
+</html>
